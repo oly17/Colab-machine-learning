@@ -1,0 +1,452 @@
+from sklearn.datasets import load_diabetes
+import pandas as pd
+
+# Завантаження датасету
+diabetes_data = load_diabetes()
+
+# Отримання даних
+X = diabetes_data.data
+y = diabetes_data.target
+feature_names = diabetes_data.feature_names
+
+# Перетворення у DataFrame для зручності
+df = pd.DataFrame(X, columns=feature_names)
+df['target'] = y
+
+# Виведення перших 5 рядків
+print(df.head())
+
+# Виведення розміру датасету
+print("Shape of the dataset:", df.shape)
+
+# Виведення типів даних
+print("Data types:\n", df.dtypes)
+
+import pandas as pd
+import numpy as np
+print("Перевірка пропущених значень:\n", df.isnull().sum())
+
+# Замінюємо пропущені значення на середнє
+df.fillna(df.mean(), inplace=True)
+
+# Перевірка наявності пропущених значень після заміни
+print("Перевірка пропущених значень після заміни:\n", df.isnull().sum())
+
+duplicates = df.duplicated().sum()
+
+print("\nКількість дублікатів:", duplicates)
+df = df.drop_duplicates()
+
+
+df['gender'] = [0, 1] * (len(df) // 2)
+
+# Перевірка унікальних значень у стовпчику «gender»
+print("Унікальні значення у стовпчику 'gender':", df['gender'].unique())
+
+# Заміна бінарних значень
+# Припустимо, 0 = 'Female', 1 = 'Male'
+df['gender'] = df['gender'].map({0: 'Female', 1: 'Male'})
+
+# Перевірка результатів
+print(df.head())
+
+df['gender'] = [0, 1] * (len(df) // 2)
+# Перевірка типів даних
+print("Типи даних у DataFrame:\n", df.dtypes)
+# Замінюємо тип даних на числовий, якщо це необхідно
+# Перетворюємо стовпчик 'gender' на числовий тип, якщо він є категоричним або об'єктним
+df['gender'] = pd.to_numeric(df['gender'], errors='coerce')
+# Перевірка типів даних після зміни
+print("\nТипи даних після заміни:\n", df.dtypes)
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+df['progress'] = y  # Додаємо стовпчик 'progress' для прогресу діабету
+
+# Обчислення кореляції між прогресом діабету та іншими ознаками
+correlation = df.corr()
+progress_corr = correlation['progress'].drop('progress')  # Вибираємо кореляції з 'progress', без самого 'progress'
+
+# Сортування кореляцій в порядку спадання
+sorted_corr = progress_corr.sort_values(ascending=False)
+print("Кореляції з прогресом діабету в порядку спадання:\n", sorted_corr)
+
+# Побудова теплової карти кореляції
+plt.figure(figsize=(10, 8))
+sns.heatmap(correlation, annot=True, cmap='coolwarm', fmt='.2f', linewidths=0.5)
+plt.title('Теплова карта кореляцій')
+plt.show()
+
+from sklearn.preprocessing import StandardScaler
+
+
+# Масштабування ознак
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(df[feature_names])
+
+# Перетворення у DataFrame після масштабування
+df_scaled = pd.DataFrame(X_scaled, columns=feature_names)
+df_scaled['progress'] = df['progress']  # Додаємо стовпчик 'progress'
+
+# Виведення перших 5 рядків масштабованого датасету
+print(df_scaled.head())
+
+from sklearn.model_selection import train_test_split
+# Поділ на тренувальну та тестову вибірки
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Виведення розмірів вибірок
+print("Розмір тренувальної вибірки X:", X_train.shape)
+print("Розмір тестової вибірки X:", X_test.shape)
+print("Розмір тренувальної вибірки y:", y_train.shape)
+print("Розмір тестової вибірки y:", y_test.shape)
+import pandas as pd
+from sklearn.datasets import load_diabetes
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_squared_error
+import numpy as np
+# Вибір найбільш корелюючих ознак
+# Наприклад, виберемо ознаки, чия кореляція з прогресом більше 0.5 або менше -0.5
+selected_features = progress_corr[abs(progress_corr) > 0.5].index
+
+# Підготовка даних з найбільш корелюючими ознаками
+X_selected = df[selected_features]
+y = df['progress']
+
+# Поділ на тренувальну та тестову вибірки
+X_train, X_test, y_train, y_test = train_test_split(X_selected, y, test_size=0.2, random_state=42)
+
+# Створення та навчання моделі лінійної регресії
+linear_model = LinearRegression()
+linear_model.fit(X_train, y_train)
+
+# Прогнозування та оцінка моделі лінійної регресії
+y_pred_linear = linear_model.predict(X_test)
+mse_linear = mean_squared_error(y_test, y_pred_linear)
+
+print("МSE лінійної регресії:", mse_linear)
+
+# Створення та навчання моделі RandomForest регресії
+rf_model = RandomForestRegressor(n_estimators=100, random_state=42)
+rf_model.fit(X_train, y_train)
+
+# Прогнозування та оцінка моделі RandomForest регресії
+y_pred_rf = rf_model.predict(X_test)
+mse_rf = mean_squared_error(y_test, y_pred_rf)
+
+print("МSE RandomForest регресії:", mse_rf)
+
+# Виведення найбільш корелюючих ознак
+print("Найбільш корелюючі ознаки:\n", selected_features)
+
+import pandas as pd
+from sklearn.datasets import load_diabetes
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_squared_error, r2_score
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+# Прогнозування та оцінка моделі лінійної регресії
+
+mse_linear = mean_squared_error(y_test, y_pred_linear)
+r2_linear = r2_score(y_test, y_pred_linear)
+
+print("Середньоквадратична помилка (MSE):", mse_linear)
+print("Коефіцієнт детермінації (R²):", r2_linear)
+
+# Створення та навчання моделі RandomForest регресії
+rf_model = RandomForestRegressor(n_estimators=100, random_state=42)
+rf_model.fit(X_train, y_train)
+
+# Прогнозування та оцінка моделі RandomForest регресії
+y_pred_rf = rf_model.predict(X_test)
+mse_rf = mean_squared_error(y_test, y_pred_rf)
+r2_rf = r2_score(y_test, y_pred_rf)
+
+print("Середньоквадратична помилка (MSE):", mse_rf)
+print("Коефіцієнт детермінації (R²):", r2_rf)
+
+# Побудова графіка для лінійної регресії
+plt.figure(figsize=(14, 6))
+
+# Лінійна регресія
+plt.subplot(1, 2, 1)
+plt.scatter(y_test, y_pred_linear, alpha=0.5)
+plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], 'r--', lw=2)
+plt.title('Лінійна регресія')
+plt.xlabel('Справжні значення')
+plt.ylabel('Прогнозовані значення')
+
+# RandomForest регресія
+plt.subplot(1, 2, 2)
+plt.scatter(y_test, y_pred_rf, alpha=0.5)
+plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], 'r--', lw=2)
+plt.title('RandomForest регресія')
+plt.xlabel('Справжні значення')
+plt.ylabel('Прогнозовані значення')
+
+plt.tight_layout()
+plt.show()
+# Виведення справжніх і прогнозованих значень
+results_linear = pd.DataFrame({'Actual': y_test, 'Predicted (Linear)': y_pred_linear})
+results_rf = pd.DataFrame({'Actual': y_test, 'Predicted (RandomForest)': y_pred_rf})
+
+print("Справжні та прогнозовані значення для лінійної регресії:")
+print(results_linear.head())
+
+print("\nСправжні та прогнозовані значення для RandomForest регресії:")
+print(results_rf.head())
+
+import pandas as pd
+from sklearn.datasets import fetch_california_housing
+
+# Завантаження датасету
+california_housing = fetch_california_housing()
+
+# Перетворення даних у DataFrame для зручності
+df = pd.DataFrame(X, columns=feature_names)
+df['Target'] = y
+
+# Виведення перших 5 рядків
+print(df.head())
+print(df.isnull().sum())
+
+# Замінюємо пропуски на середнє значення (хоча для цього датасету пропусків може не бути)
+df.fillna(df.mean(), inplace=True)
+# Перевірка наявності дублікатів
+print(df.duplicated().sum())
+
+# Видалення дублікатів
+df.drop_duplicates(inplace=True)
+
+# Перевірка унікальних значень для бінарних ознак
+# Припустимо, у вас є стовпець 'binary_feature'
+if 'binary_feature' in df.columns:
+    print(df['binary_feature'].unique())
+
+    # Замінюємо бінарні значення на числові, якщо необхідно
+    df['binary_feature'] = df['binary_feature'].map({'Yes': 1, 'No': 0})
+
+# Перевірка типів даних
+print(df.dtypes)
+print(df)
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Обчислення кореляції
+correlation = df.corr()
+
+# Виведення кореляції з цільовою змінною (наприклад, Target)
+print(correlation['Target'].sort_values(ascending=False))
+
+# Побудова теплової карти кореляції
+plt.figure(figsize=(12, 8))
+sns.heatmap(correlation, annot=True, cmap='coolwarm', fmt='.2f')
+plt.title('Теплова карта кореляції')
+plt.show()
+
+from sklearn.preprocessing import StandardScaler
+
+# Створення екземпляра StandardScaler
+scaler = StandardScaler()
+
+# Масштабування ознак (без цільової змінної)
+X_scaled = scaler.fit_transform(df.drop('Target', axis=1))
+
+# Перетворення в DataFrame для зручності
+df_scaled = pd.DataFrame(X_scaled, columns=df.columns[:-1])
+df_scaled['Target'] = df['Target']
+
+# Виведення перших 5 рядків масштабованих даних
+print(df_scaled.head())
+from sklearn.preprocessing import MinMaxScaler
+
+# Створення екземпляра MinMaxScaler
+scaler = MinMaxScaler()
+
+# Масштабування ознак (без цільової змінної)
+X_scaled = scaler.fit_transform(df.drop('Target', axis=1))
+
+# Перетворення в DataFrame для зручності
+df_scaled = pd.DataFrame(X_scaled, columns=df.columns[:-1])
+df_scaled['Target'] = df['Target']
+
+# Виведення перших 5 рядків масштабованих даних
+print(df_scaled.head())
+
+from sklearn.model_selection import train_test_split
+
+# Вибір ознак та цільової змінної
+X = df_scaled.drop('Target', axis=1)  # Ознаки
+y = df_scaled['Target']  # Цільова змінна
+
+# Поділ на тренувальні та тестові вибірки
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Виведення розмірів тренувальної та тестової вибірок
+print(f'Розмір тренувальної вибірки: {X_train.shape[0]} зразків')
+print(f'Розмір тестової вибірки: {X_test.shape[0]} зразків')
+
+import numpy as np
+from sklearn.datasets import fetch_california_housing
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.linear_model import LinearRegression, Ridge
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_squared_error, r2_score
+
+# Лінійна регресія
+lin_reg = LinearRegression()
+lin_reg.fit(X_train, y_train)
+y_pred_lin = lin_reg.predict(X_test)
+print('Лінійна регресія:')
+print('R^2:', r2_score(y_test, y_pred_lin))
+print('MSE:', mean_squared_error(y_test, y_pred_lin))
+
+# Гіперпараметри для GridSearch для RandomForestRegressor
+rf_params = {
+    'n_estimators': [50, 100, 200],
+    'max_depth': [None, 10, 20, 30],
+    'min_samples_split': [2, 5, 10],
+    'min_samples_leaf': [1, 2, 4]
+}
+
+# Гіперпараметри для GridSearch для Ridge
+ridge_params = {
+    'alpha': [0.1, 1, 10, 100]
+}
+
+# GridSearch для RandomForestRegressor
+rf = RandomForestRegressor(random_state=42)
+rf_grid_search = GridSearchCV(estimator=rf, param_grid=rf_params, cv=5, scoring='neg_mean_squared_error')
+rf_grid_search.fit(X_train, y_train)
+best_rf = rf_grid_search.best_estimator_
+y_pred_rf = best_rf.predict(X_test)
+print('\nRandomForestRegressor:')
+print('Best parameters:', rf_grid_search.best_params_)
+print('R^2:', r2_score(y_test, y_pred_rf))
+print('MSE:', mean_squared_error(y_test, y_pred_rf))
+
+# GridSearch для Ridge
+ridge = Ridge()
+ridge_grid_search = GridSearchCV(estimator=ridge, param_grid=ridge_params, cv=5, scoring='neg_mean_squared_error')
+ridge_grid_search.fit(X_train, y_train)
+best_ridge = ridge_grid_search.best_estimator_
+y_pred_ridge = best_ridge.predict(X_test)
+print('\nRidge Regression:')
+print('Best parameters:', ridge_grid_search.best_params_)
+print('R^2:', r2_score(y_test, y_pred_ridge))
+print('MSE:', mean_squared_error(y_test, y_pred_ridge))
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.datasets import fetch_california_housing
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.linear_model import LinearRegression, Ridge
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.preprocessing import StandardScaler
+import pandas as pd
+
+# Завантаження датасету
+california_housing = fetch_california_housing()
+X = california_housing.data
+y = california_housing.target
+feature_names = california_housing.feature_names
+
+# Створення DataFrame для зручності
+df = pd.DataFrame(X, columns=feature_names)
+df['Target'] = y
+
+# Масштабування ознак
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(df.drop('Target', axis=1))
+X = pd.DataFrame(X_scaled, columns=df.columns[:-1])
+y = df['Target']
+
+# Поділ на тренувальні та тестові вибірки
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Лінійна регресія
+lin_reg = LinearRegression()
+lin_reg.fit(X_train, y_train)
+y_pred_lin = lin_reg.predict(X_test)
+r2_lin = r2_score(y_test, y_pred_lin)
+mse_lin = mean_squared_error(y_test, y_pred_lin)
+
+# GridSearch для RandomForestRegressor
+rf_params = {
+    'n_estimators': [50, 100, 200],
+    'max_depth': [None, 10, 20, 30],
+    'min_samples_split': [2, 5, 10],
+    'min_samples_leaf': [1, 2, 4]
+}
+rf = RandomForestRegressor(random_state=42)
+rf_grid_search = GridSearchCV(estimator=rf, param_grid=rf_params, cv=5, scoring='neg_mean_squared_error')
+rf_grid_search.fit(X_train, y_train)
+best_rf = rf_grid_search.best_estimator_
+y_pred_rf = best_rf.predict(X_test)
+r2_rf = r2_score(y_test, y_pred_rf)
+mse_rf = mean_squared_error(y_test, y_pred_rf)
+
+# GridSearch для Ridge
+ridge_params = {
+    'alpha': [0.1, 1, 10, 100]
+}
+ridge = Ridge()
+ridge_grid_search = GridSearchCV(estimator=ridge, param_grid=ridge_params, cv=5, scoring='neg_mean_squared_error')
+ridge_grid_search.fit(X_train, y_train)
+best_ridge = ridge_grid_search.best_estimator_
+y_pred_ridge = best_ridge.predict(X_test)
+r2_ridge = r2_score(y_test, y_pred_ridge)
+mse_ridge = mean_squared_error(y_test, y_pred_ridge)
+
+# Виведення R^2 і MSE
+print('Лінійна регресія:')
+print(f'R^2: {r2_lin:.2f}')
+print(f'MSE: {mse_lin:.2f}')
+
+print('\nRandomForestRegressor:')
+print(f'Best parameters: {rf_grid_search.best_params_}')
+print(f'R^2: {r2_rf:.2f}')
+print(f'MSE: {mse_rf:.2f}')
+
+print('\nRidge Regression:')
+print(f'Best parameters: {ridge_grid_search.best_params_}')
+print(f'R^2: {r2_ridge:.2f}')
+print(f'MSE: {mse_ridge:.2f}')
+
+# Побудова графіків
+plt.figure(figsize=(15, 5))
+
+# Графік для лінійної регресії
+plt.subplot(1, 3, 1)
+plt.scatter(y_test, y_pred_lin, alpha=0.3)
+plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], '--k', color='red')
+plt.title('Лінійна регресія')
+plt.xlabel('Реальні значення')
+plt.ylabel('Прогнозовані значення')
+
+# Графік для RandomForestRegressor
+plt.subplot(1, 3, 2)
+plt.scatter(y_test, y_pred_rf, alpha=0.3)
+plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], '--k', color='red')
+plt.title('RandomForestRegressor')
+plt.xlabel('Реальні значення')
+plt.ylabel('Прогнозовані значення')
+
+# Графік для Ridge Regression
+plt.subplot(1, 3, 3)
+plt.scatter(y_test, y_pred_ridge, alpha=0.3)
+plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], '--k', color='red')
+plt.title('Ridge Regression')
+plt.xlabel('Реальні значення')
+plt.ylabel('Прогнозовані значення')
+
+plt.tight_layout()
+plt.show()
