@@ -1,0 +1,172 @@
+import pandas as pd
+from sklearn.datasets import fetch_california_housing
+from sklearn.model_selection import train_test_split
+# Завантаження датасету California Housing
+housing_data = fetch_california_housing()
+X = pd.DataFrame(housing_data.data, columns=housing_data.feature_names)
+y = pd.Series(housing_data.target)
+df = pd.concat([X, y.rename('MedHouseVal')], axis=1)
+
+# Виведення перших 5 рядків датасету
+print(df.head())
+# Розподіл на навчальну та тестову вибірки (80/20)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+print("Розмір навчальної вибірки:", X_train.shape)
+print("Розмір тестової вибірки:", X_test.shape)
+import pandas as pd
+from sklearn.datasets import fetch_california_housing
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+# Створення моделі
+model = LinearRegression()
+model.fit(X_train, y_train)
+# Прогнозування на тестовій вибірці
+y_pred = model.predict(X_test)
+
+# Обчислення метрик
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+
+print(f"Mean Squared Error: {mse:.2f}")
+print(f"R^2 Score: {r2:.2f}")
+import numpy as np
+from sklearn.linear_model import Ridge, Lasso
+from sklearn.model_selection import GridSearchCV, cross_val_score
+# Параметри для регуляризації
+alphas = np.logspace(-4, 4, 100)  # Значення альфа від 10^-4 до 10^4
+# Ridge Regression
+ridge_model = Ridge()
+ridge_grid = GridSearchCV(ridge_model, {'alpha': alphas}, cv=5, scoring='neg_mean_squared_error')
+ridge_grid.fit(X_train, y_train)
+
+# Найкраще значення параметра альфа
+print("Best alpha for Ridge:", ridge_grid.best_params_)
+print("Best MSE for Ridge:", -ridge_grid.best_score_)
+# Lasso Regression
+lasso_model = Lasso()
+lasso_grid = GridSearchCV(lasso_model, {'alpha': alphas}, cv=5, scoring='neg_mean_squared_error')
+lasso_grid.fit(X_train, y_train)
+
+# Найкраще значення параметра альфа
+print("Best alpha for Lasso:", lasso_grid.best_params_)
+print("Best MSE for Lasso:", -lasso_grid.best_score_)
+# Оцінка продуктивності моделі Ridge
+ridge_cv_scores = cross_val_score(ridge_grid.best_estimator_, X, y, cv=5, scoring='neg_mean_squared_error')
+print("Ridge CV Mean Squared Error:", -ridge_cv_scores.mean())
+
+# Оцінка продуктивності моделі Lasso
+lasso_cv_scores = cross_val_score(lasso_grid.best_estimator_, X, y, cv=5, scoring='neg_mean_squared_error')
+print("Lasso CV Mean Squared Error:", -lasso_cv_scores.mean())
+# Прогнозування на тестовій вибірці з найкращою моделлю Ridge
+ridge_best_model = ridge_grid.best_estimator_
+y_pred_ridge = ridge_best_model.predict(X_test)
+
+# Обчислення метрик для Ridge
+mse_ridge = mean_squared_error(y_test, y_pred_ridge)
+r2_ridge = r2_score(y_test, y_pred_ridge)
+
+print(f"Ridge Mean Squared Error: {mse_ridge:.2f}")
+print(f"Ridge R^2 Score: {r2_ridge:.2f}")
+# Прогнозування на тестовій вибірці з найкращою моделлю Lasso
+lasso_best_model = lasso_grid.best_estimator_
+y_pred_lasso = lasso_best_model.predict(X_test)
+
+# Обчислення метрик для Lasso
+mse_lasso = mean_squared_error(y_test, y_pred_lasso)
+r2_lasso = r2_score(y_test, y_pred_lasso)
+
+print(f"Lasso Mean Squared Error: {mse_lasso:.2f}")
+print(f"Lasso R^2 Score: {r2_lasso:.2f}")
+print(f"Baseline Model Mean Squared Error: {mse:.2f}")
+print(f"Baseline Model R^2 Score: {r2:.2f}")
+import matplotlib.pyplot as plt
+# Отримуємо результати з GridSearchCV для Ridge
+ridge_mse = -ridge_grid.cv_results_['mean_test_score']
+
+# Побудова графіку
+plt.figure(figsize=(10, 6))
+plt.plot(alphas, ridge_mse, marker='o')
+plt.xscale('log')
+plt.title('Ridge Regression: MSE vs Alpha')
+plt.xlabel('Alpha (Regularization Strength)')
+plt.ylabel('Mean Squared Error')
+plt.grid(True)
+plt.show()
+
+# Отримуємо результати з GridSearchCV для Lasso
+lasso_mse = -lasso_grid.cv_results_['mean_test_score']
+
+# Побудова графіку
+plt.figure(figsize=(10, 6))
+plt.plot(alphas, lasso_mse, marker='o', color='orange')
+plt.xscale('log')
+plt.title('Lasso Regression: MSE vs Alpha')
+plt.xlabel('Alpha (Regularization Strength)')
+plt.ylabel('Mean Squared Error')
+plt.grid(True)
+plt.show()
+import pandas as pd
+from sklearn.datasets import fetch_california_housing
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
+from sklearn.metrics import silhouette_score
+import numpy as np
+
+# Завантаження даних
+housing_data = fetch_california_housing()
+X = pd.DataFrame(housing_data.data, columns=housing_data.feature_names)
+
+# Стандартизація даних
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+# Метод ліктя
+wcss = []
+for i in range(1, 11):
+    kmeans = KMeans(n_clusters=i, random_state=42)
+    kmeans.fit(X_scaled)
+    wcss.append(kmeans.inertia_)
+
+# Візуалізація методу ліктя
+plt.figure(figsize=(10, 6))
+plt.plot(range(1, 11), wcss, marker='o', linestyle='--')
+plt.title('Метод ліктя')
+plt.xlabel('Кількість кластерів')
+plt.ylabel('WCSS (Within-Cluster Sum of Squares)')
+plt.grid(True)
+plt.show()
+# Метод силуетів
+silhouette_scores = []
+for i in range(2, 11):
+    kmeans = KMeans(n_clusters=i, random_state=42)
+    kmeans.fit(X_scaled)
+    score = silhouette_score(X_scaled, kmeans.labels_)
+    silhouette_scores.append(score)
+
+# Візуалізація методу силуетів
+plt.figure(figsize=(10, 6))
+plt.plot(range(2, 11), silhouette_scores, marker='o', color='orange')
+plt.title('Метод силуетів')
+plt.xlabel('Кількість кластерів')
+plt.ylabel('Силуетний коефіцієнт')
+plt.grid(True)
+plt.show()
+# Кластеризація з оптимальною кількістю кластерів
+optimal_clusters = 3
+kmeans = KMeans(n_clusters=optimal_clusters, random_state=42)
+clusters = kmeans.fit_predict(X_scaled)
+
+# Додавання кластерів до датафрейму
+X['Cluster'] = clusters
+
+# Візуалізація кластерів (вибір двох ознак для спрощення)
+plt.figure(figsize=(10, 6))
+plt.scatter(X['MedInc'], X['HouseAge'], c=clusters, cmap='viridis', alpha=0.5)
+plt.title('Візуалізація кластерів')
+plt.xlabel('Середній дохід (MedInc)')
+plt.ylabel('Вік будинку (HouseAge)')
+plt.grid(True)
+plt.show()
