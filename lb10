@@ -93,3 +93,108 @@ for i in range(10):
     plt.imshow(x_test[i])
     plt.xlabel(f"Pred: {class_names[y_pred_classes[i]]}\nTrue: {class_names[y_test[i][0]]}")
 plt.show()
+
+
+import tensorflow as tf
+from tensorflow.keras import datasets, layers, models, applications
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.metrics import classification_report
+
+# Завантаження датасету CIFAR-10
+(x_train, y_train), (x_test, y_test) = datasets.cifar10.load_data()
+
+# Нормалізація зображень
+x_train, x_test = x_train / 255.0, x_test / 255.0
+
+# Виведення перших 10 зображень
+class_names = ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+
+plt.figure(figsize=(10,10))
+for i in range(10):
+    plt.subplot(1,10,i+1)
+    plt.xticks([])
+    plt.yticks([])
+    plt.grid(False)
+    plt.imshow(x_train[i])
+    plt.xlabel(class_names[y_train[i][0]])
+plt.show()
+
+# Завантаження VGG16 без верхніх шарів (щоб додати свої класифікаційні шари)
+base_model = applications.VGG16(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
+
+# Заморожування всіх шарів базової моделі
+for layer in base_model.layers:
+    layer.trainable = False
+
+# Створення нової моделі з базовою моделлю і новими шарами
+model = models.Sequential()
+
+# Додавання шару для зміни розміру зображень до 224x224
+model.add(layers.Resizing(224, 224, input_shape=(32, 32, 3)))
+
+# Додавання базової моделі VGG16
+model.add(base_model)
+
+# Додавання нових шарів зверху для класифікації
+model.add(layers.Flatten())
+model.add(layers.Dense(512, activation='relu'))
+model.add(layers.Dropout(0.5))
+model.add(layers.Dense(10, activation='softmax'))  # CIFAR-10 має 10 класів
+
+# Компіляція моделі
+model.compile(optimizer='adam',
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy'])
+
+# Виведення структури моделі
+model.summary()
+
+# Використання колбеків (рання зупинка і зменшення швидкості навчання)
+early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5)
+reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=3)
+
+# Навчання моделі
+history = model.fit(x_train, y_train, epochs=20, batch_size=64,
+                    validation_data=(x_test, y_test),
+                    callbacks=[early_stopping, reduce_lr])
+
+# Побудова графіків функції втрат та точності
+plt.figure(figsize=(12, 4))
+
+# Графік втрат
+plt.subplot(1, 2, 1)
+plt.plot(history.history['loss'], label='loss')
+plt.plot(history.history['val_loss'], label='val_loss')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.legend(loc='upper right')
+
+# Графік точності
+plt.subplot(1, 2, 2)
+plt.plot(history.history['accuracy'], label='accuracy')
+plt.plot(history.history['val_accuracy'], label='val_accuracy')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.legend(loc='lower right')
+
+plt.show()
+
+# Оцінка моделі та класифікаційний звіт
+y_pred = model.predict(x_test)
+y_pred_classes = np.argmax(y_pred, axis=1)
+
+print("Classification Report:")
+print(classification_report(y_test, y_pred_classes, target_names=class_names))
+
+# Візуалізація кількох результатів розпізнавання
+plt.figure(figsize=(10,10))
+for i in range(10):
+    plt.subplot(1,10,i+1)
+    plt.xticks([])
+    plt.yticks([])
+    plt.grid(False)
+    plt.imshow(x_test[i])
+    plt.xlabel(f"Pred: {class_names[y_pred_classes[i]]}\nTrue: {class_names[y_test[i][0]]}")
+plt.show()
+
