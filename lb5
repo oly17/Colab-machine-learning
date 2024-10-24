@@ -1,0 +1,146 @@
+import pandas as pd
+from sklearn.datasets import load_iris
+
+# Завантаження датасету
+iris = load_iris()
+df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
+
+# Виведення перших 5 рядків
+print(df.head())
+
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+
+wcss = []
+for i in range(1, 11):
+    kmeans = KMeans(n_clusters=i, random_state=42)
+    kmeans.fit(df)
+    wcss.append(kmeans.inertia_)
+
+# Візуалізація методу ліктя
+plt.figure(figsize=(10, 6))
+plt.plot(range(1, 11), wcss, marker='o', linestyle='--')
+plt.title('Метод ліктя')
+plt.xlabel('Кількість кластерів')
+plt.ylabel('WCSS')
+plt.show()
+from sklearn.metrics import silhouette_score
+
+silhouette_scores = []
+for i in range(2, 11):  # починаємо з 2, оскільки силует не має сенсу для 1 кластеру
+    kmeans = KMeans(n_clusters=i, random_state=42)
+    cluster_labels = kmeans.fit_predict(df)
+    silhouette_scores.append(silhouette_score(df, cluster_labels))
+
+# Візуалізація
+plt.figure(figsize=(10, 6))
+plt.plot(range(2, 11), silhouette_scores, marker='o', linestyle='--')
+plt.title('Метод силуетів')
+plt.xlabel('Кількість кластерів')
+plt.ylabel('Силует')
+plt.show()
+
+# Виконання кластеризації
+optimal_k = 3
+kmeans = KMeans(n_clusters=optimal_k, random_state=42)
+df['Cluster'] = kmeans.fit_predict(df)
+
+# Візуалізація
+plt.figure(figsize=(10, 6))
+plt.scatter(df.iloc[:, 0], df.iloc[:, 1], c=df['Cluster'], cmap='viridis', marker='o')
+plt.title('Кластери Iris Dataset')
+plt.xlabel(iris.feature_names[0])
+plt.ylabel(iris.feature_names[1])
+plt.show()
+from google.colab import drive
+drive.mount('/content/drive')file_path='/content/drive/My Drive/Student_data.csv'
+df=pd.read_csv(file_path)
+df.head()
+print("Розмір датасету:", df.shape)
+print("Типи даних:\n", df.dtypes)
+# Перевірка на пропущені значення
+print("Пропущені значення:\n", df.isnull().sum())
+
+# Заміна пропущених значень на середнє
+df.fillna(df.mean(), inplace=True)
+# Перевірка на дублікати
+duplicates = df.duplicated().sum()
+print("Кількість дублікатів:", duplicates)
+
+# Видалення дублікатів
+if duplicates > 0:
+    df.drop_duplicates(inplace=True)
+# Описова статистика
+print("Описова статистика:\n", df.describe())
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.metrics import mean_squared_error, accuracy_score
+
+X = df.drop('GPA', axis=1)
+y = df['GPA']
+
+# Розподіл на навчальну та тестову вибірки
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Моделі
+models = {
+    'Linear Regression': LinearRegression(),
+    'Random Forest': RandomForestRegressor(),
+    'Gradient Boosting': GradientBoostingRegressor()
+}
+
+for name, model in models.items():
+    model.fit(X_train, y_train)
+    predictions = model.predict(X_test)
+    mse = mean_squared_error(y_test, predictions)
+    print(f"{name} - MSE: {mse:.2f}")
+from sklearn.model_selection import GridSearchCV
+
+param_grid = {
+    'n_estimators': [50, 100, 200],
+    'max_depth': [None, 10, 20, 30]
+}
+
+grid_search = GridSearchCV(RandomForestRegressor(), param_grid, cv=5)
+grid_search.fit(X_train, y_train)
+print("Найкращі параметри:", grid_search.best_params_)from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
+import matplotlib.pyplot as plt
+
+# Метод ліктя
+wcss = []
+for i in range(1, 11):
+    kmeans = KMeans(n_clusters=i, random_state=42)
+    kmeans.fit(X)
+    wcss.append(kmeans.inertia_)
+
+plt.figure(figsize=(10, 6))
+plt.plot(range(1, 11), wcss, marker='o', linestyle='--')
+plt.title('Метод ліктя')
+plt.xlabel('Кількість кластерів')
+plt.ylabel('WCSS')
+plt.show()
+
+# Метод силуетів
+silhouette_scores = []
+for i in range(2, 11):
+    kmeans = KMeans(n_clusters=i, random_state=42)
+    cluster_labels = kmeans.fit_predict(X)
+    silhouette_scores.append(silhouette_score(X, cluster_labels))
+
+plt.figure(figsize=(10, 6))
+plt.plot(range(2, 11), silhouette_scores, marker='o', linestyle='--')
+plt.title('Метод силуетів')
+plt.xlabel('Кількість кластерів')
+plt.ylabel('Силует')
+plt.show()kmeans = KMeans(n_clusters=3, random_state=42)
+df['Cluster'] = kmeans.fit_predict(X)
+
+plt.figure(figsize=(10, 6))
+plt.scatter(df.iloc[:, 0], df.iloc[:, 1], c=df['Cluster'], cmap='viridis', marker='o')
+plt.title('Кластери даних')
+plt.xlabel('Перша ознака')
+plt.ylabel('Друга ознака')
+plt.show()
