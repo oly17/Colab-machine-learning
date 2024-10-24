@@ -1,0 +1,155 @@
+!pip install scikit-surprise
+# Імпортуємо необхідні бібліотеки
+from surprise import Dataset, Reader, SVD, KNNBasic
+from surprise.model_selection import train_test_split, GridSearchCV, cross_validate
+from surprise import accuracy
+from surprise.model_selection import KFold
+
+# 1. Завантажуємо датасет MovieLens 100k з бібліотеки Surprise
+data = Dataset.load_builtin('ml-100k')
+
+# Ділимо дані на тренувальні і тестові
+trainset, testset = train_test_split(data, test_size=0.25)
+
+# 2. Виведемо перші 5 рядків завантаженого датасету
+# Необхідно вручну переглянути 5 записів, оскільки Surprise використовує внутрішній формат
+raw_ratings = data.raw_ratings[:5]
+print("Перші 5 рядків завантаженого датасету:")
+for line in raw_ratings:
+    print(line)
+
+# 3. Реалізуємо два алгоритми для рекомендаційної системи
+# Алгоритм 1: SVD
+svd = SVD()
+
+# Алгоритм 2: KNNBasic (алгоритм на основі сусідніх користувачів)
+knn = KNNBasic()
+
+# 4. Використаємо крос-валідацію для підбору оптимальних параметрів для обох алгоритмів
+# Для SVD використовуємо GridSearchCV
+param_grid_svd = {
+    'n_factors': [50, 100, 150],
+    'lr_all': [0.002, 0.005, 0.01],
+    'reg_all': [0.02, 0.05, 0.1]
+}
+gs_svd = GridSearchCV(SVD, param_grid_svd, measures=['mae'], cv=3)
+gs_svd.fit(data)
+
+# Для KNNBasic теж використовуємо GridSearchCV
+param_grid_knn = {
+    'k': [20, 30, 40],
+    'min_k': [1, 2, 3],
+    'sim_options': {
+        'name': ['cosine', 'msd'],
+        'user_based': [True, False]
+    }
+}
+gs_knn = GridSearchCV(KNNBasic, param_grid_knn, measures=['mae'], cv=3)
+gs_knn.fit(data)
+
+# Виведемо найкращі параметри для обох алгоритмів
+print("Найкращі параметри для SVD:", gs_svd.best_params['mae'])
+print("Найкращі параметри для KNNBasic:", gs_knn.best_params['mae'])
+
+# 5. Оберемо найкращий алгоритм на основі MAE
+best_svd = gs_svd.best_estimator['mae']
+best_knn = gs_knn.best_estimator['mae']
+
+# Виконаємо крос-валідацію для обох моделей
+cv_results_svd = cross_validate(best_svd, data, measures=['mae'], cv=5, verbose=True)
+cv_results_knn = cross_validate(best_knn, data, measures=['mae'], cv=5, verbose=True)
+
+# Порівняємо середні MAE для обох алгоритмів
+mean_mae_svd = cv_results_svd['test_mae'].mean()
+mean_mae_knn = cv_results_knn['test_mae'].mean()
+
+print(f"Середня MAE для SVD: {mean_mae_svd}")
+print(f"Середня MAE для KNNBasic: {mean_mae_knn}")
+
+# Виберемо найкращий алгоритм
+if mean_mae_svd < mean_mae_knn:
+    best_algorithm = best_svd
+    print("Алгоритм SVD є найкращим на основі MAE.")
+else:
+    best_algorithm = best_knn
+    print("Алгоритм KNNBasic є найкращим на основі MAE.")
+
+# 6. Виведемо рекомендації (10 фільмів) для конкретного користувача
+# Для цього необхідно навчити найкращу модель на повному наборі даних
+trainset = data.build_full_trainset()
+best_algorithm.fit(trainset)
+
+# Вибираємо користувача, для якого будемо робити рекомендації
+user_id = str(196)  # Замість 196 можна підставити будь-який інший ID користувача
+
+# Створимо список усіх фільмів
+movie_ids = trainset.all_items()
+movie_inner_ids = [trainset.to_raw_iid(iid) for iid in movie_ids]
+
+# Отримаємо рекомендації (фільми, які користувач ще не дивився)
+user_watched = [iid for iid, _ in trainset.ur[trainset.to_inner_uid(user_id)]]
+recommendations = []
+
+for movie_id in movie_inner_ids:
+    if movie_id not in user_watched:
+        pred = best_algorithm.predict(user_id, movie_id)
+        recommendations.append((movie_id, pred.est))
+
+# Відсортуємо фільми за прогнозованим рейтингом і виведемо топ-10
+recommendations.sort(key=lambda x: x[1], reverse=True)
+
+print(f"\nТоп-10 рекомендованих фільмів для користувача {user_id}:")
+for movie_id, rating in recommendations[:10]:
+    print(f"Фільм ID: {movie_id}, прогнозований рейтинг: {rating}")
+# Імпортуємо необхідні бібліотеки
+from surprise import Dataset, Reader, SVD
+from surprise.model_selection import cross_validate, train_test_split
+from surprise import accuracy
+
+# 1. Завантажуємо дані MovieLens 100k із бібліотеки Surprise
+data = Dataset.load_builtin('ml-100k')
+
+# Ділимо датасет на тренувальний та тестовий набори
+trainset, testset = train_test_split(data, test_size=0.25)
+
+# 2. Реалізуємо алгоритм SVD для рекомендаційної системи
+algo = SVD()
+
+# Навчання на тренувальних даних
+algo.fit(trainset)
+
+# Прогнозування на тестових даних
+predictions = algo.test(testset)
+
+# 3. Оцінка алгоритму
+# Використовуємо метрику середньої абсолютної помилки (MAE) та кореневої середньоквадратичної помилки (RMSE)
+mae = accuracy.mae(predictions)
+rmse = accuracy.rmse(predictions)
+
+# 4. Отримуємо рекомендації для певного користувача
+# Вибираємо ID користувача (в нашому випадку користувач з ID 196)
+user_id = str(196)  # ID користувача у форматі str
+
+# Отримуємо всі фільми з датасету
+trainset = data.build_full_trainset()
+algo.fit(trainset)
+movie_ids = trainset.all_items()
+movie_inner_ids = [trainset.to_raw_iid(iid) for iid in movie_ids]
+
+# Фільми, які вже переглянув користувач
+user_watched = [iid for iid, _ in trainset.ur[trainset.to_inner_uid(user_id)]]
+
+# Прогнозуємо рейтинг для фільмів, які користувач ще не переглядав
+recommendations = []
+for movie_id in movie_inner_ids:
+    if movie_id not in user_watched:
+        pred = algo.predict(user_id, movie_id)
+        recommendations.append((movie_id, pred.est))
+
+# Відсортуємо рекомендації за передбаченим рейтингом
+recommendations.sort(key=lambda x: x[1], reverse=True)
+
+# Виведемо топ-10 рекомендованих фільмів для користувача
+print(f"\nТоп-10 рекомендованих фільмів для користувача {user_id}:")
+for movie_id, rating in recommendations[:10]:
+    print(f"Фільм ID: {movie_id}, прогнозований рейтинг: {rating}")
