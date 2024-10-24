@@ -1,0 +1,125 @@
+from google.colab import files
+uploaded=files.upload()
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+filename=list(uploaded.keys())[0]
+df=pd.read_csv(filename)
+df.head(5)
+df.info()
+df.shape
+ax=df['class'].value_counts().plot(kind='bar',figsize=(4,4))
+for i in ax.containers:
+  ax.bar_label(i)
+  ax.set_xlabel("value")
+  ax.set_ylabel("count")
+
+plt.suptitle("Target feature distribution")
+plt.tight_layout()
+plt.show()
+df.describe()
+df.isnull().sum()
+correlation_matrix=df.corr()
+correlation_with_class=correlation_matrix['class']
+correlation_with_class
+correlation_matrix
+import pandas as pd
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import classification_report,accuracy_score
+y=df['class']
+X=df.drop('class',axis=1)
+X_train,X_test,y_train,y_test=train_test_split(X,y,test_size=0.3,random_state=42)
+models={
+    'Random Forest':{
+        'model': RandomForestClassifier(random_state=42),
+        'params':{
+            'n_estimators':[100,200],
+            'max_depth':[None,10,20],
+            'min_samples_split':[2,5]
+        }
+        },
+    'Logistic Reggression':{
+        'model':LogisticRegression(random_state=42,max_iter=10000),
+        'params':{
+            'C':[0.1,1,10],
+            'solver':['liblinear','lbfgs']
+        }
+    },
+    'K-Nearest Neighbors':{
+        'model':KNeighborsClassifier(),
+        'params':{
+            'n_neighbors':[3,5,7],
+            'weights':['uniform','distance'],
+            'metric':['euclidean','manhattan']
+        }
+    }
+}
+for name, model_info in models.items():
+  grid_search=GridSearchCV(model_info['model'],model_info['params'],cv=5,scoring='accuracy',n_jobs=-1)
+  grid_search.fit(X_train,y_train)
+
+  best_model=grid_search.best_estimator_
+  y_pred=best_model.predict(X_test)
+
+  print(f"Model:{name}")
+  print(f"Best Purams:{grid_search.best_params_}")
+  print(f"Accuracy:{accuracy_score(y_test,y_pred)}")
+  print(classification_report(y_test,y_pred))
+  print("-"*50)
+
+df.head()
+correlation_with_class=correlation_matrix['class']
+print(correlation_with_class)
+y=df['class']
+X=df[['cap-diameter','cap-shape','stem-height','stem-width']]
+X_train,X_test,y_train,y_test=train_test_split(X,y,test_size=0.3,random_state=42)
+import seaborn as sns
+
+data=sns.load_dataset('mpg')
+sns.lmplot(x="horsepower",y="displacement",data=data)
+sns.regplot(x="horsepower",y="displacement",data=data)
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+from sklearn.datasets import make_blobs
+from sklearn.metrics import silhouette_score
+
+X, _ = make_blobs(n_samples=500, centers=4, cluster_std=1.0, random_state=42)
+
+#Метод ліктя
+inertia = []
+k_range = range(1, 11)
+
+for k in k_range:
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    kmeans.fit(X)
+    inertia.append(kmeans.inertia_)
+
+plt.figure(figsize=(8, 4))
+plt.plot(k_range, inertia, marker='o')
+plt.title('Метод ліктя для визначення кількості кластерів')
+plt.xlabel('Кількість кластерів')
+plt.ylabel('Інерція')
+plt.show()
+
+#Метод силуетів
+silhouette_scores = []
+
+for k in k_range[1:]:  # k має бути >= 2
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    kmeans.fit(X)
+    score = silhouette_score(X, kmeans.labels_)
+    silhouette_scores.append(score)
+
+
+plt.figure(figsize=(8, 4))
+plt.plot(k_range[1:], silhouette_scores, marker='o', color='orange')
+plt.title('Метод силуетів для визначення кількості кластерів')
+plt.xlabel('Кількість кластерів')
+plt.ylabel('Середній коефіцієнт силуетів')
+plt.show()
+
+
