@@ -1,0 +1,95 @@
+import tensorflow as tf
+from tensorflow.keras import datasets, layers, models
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.metrics import classification_report
+
+# Завантаження датасету CIFAR-10
+(x_train, y_train), (x_test, y_test) = datasets.cifar10.load_data()
+
+# Нормалізація зображень
+x_train, x_test = x_train / 255.0, x_test / 255.0
+
+# Виведення перших 10 зображень
+class_names = ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+
+plt.figure(figsize=(10,10))
+for i in range(10):
+    plt.subplot(1,10,i+1)
+    plt.xticks([])
+    plt.yticks([])
+    plt.grid(False)
+    plt.imshow(x_train[i])
+    plt.xlabel(class_names[y_train[i][0]])
+plt.show()
+
+# Створення моделі
+model = models.Sequential()
+
+# Додавання згорткових і повнозв'язних шарів
+model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(32, 32, 3)))
+model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+
+# Додавання повнозв'язних шарів
+model.add(layers.Flatten())
+model.add(layers.Dense(64, activation='relu'))
+model.add(layers.Dense(10))
+
+# Компіляція моделі
+model.compile(optimizer='adam',
+              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+              metrics=['accuracy'])
+
+# Виведення структури моделі
+model.summary()
+
+# Використання колбеків (рання зупинка і зменшення швидкості навчання)
+early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5)
+reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=3)
+
+# Навчання моделі
+history = model.fit(x_train, y_train, epochs=20, batch_size=64,
+                    validation_data=(x_test, y_test),
+                    callbacks=[early_stopping, reduce_lr])
+
+# Побудова графіків функції втрат і точності
+plt.figure(figsize=(12, 4))
+
+# Графік втрат
+plt.subplot(1, 2, 1)
+plt.plot(history.history['loss'], label='loss')
+plt.plot(history.history['val_loss'], label='val_loss')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.legend(loc='upper right')
+
+# Графік точності
+plt.subplot(1, 2, 2)
+plt.plot(history.history['accuracy'], label='accuracy')
+plt.plot(history.history['val_accuracy'], label='val_accuracy')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.legend(loc='lower right')
+
+plt.show()
+
+# Оцінка моделі та класифікаційний звіт
+y_pred = model.predict(x_test)
+y_pred_classes = np.argmax(y_pred, axis=1)
+
+print("Classification Report:")
+print(classification_report(y_test, y_pred_classes, target_names=class_names))
+
+# Візуалізація кількох результатів розпізнавання
+plt.figure(figsize=(10,10))
+for i in range(10):
+    plt.subplot(1,10,i+1)
+    plt.xticks([])
+    plt.yticks([])
+    plt.grid(False)
+    plt.imshow(x_test[i])
+    plt.xlabel(f"Pred: {class_names[y_pred_classes[i]]}\nTrue: {class_names[y_test[i][0]]}")
+plt.show()
