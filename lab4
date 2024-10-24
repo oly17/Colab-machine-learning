@@ -1,0 +1,433 @@
+import time
+import random
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import accuracy_score,classification_report
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
+from sklearn.model_selection import KFold, cross_val_score
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.ensemble import RandomForestClassifier
+
+from google.colab import drive
+
+drive.mount('/content/drive')
+
+file_path='/content/drive/My Drive/titanic.csv'
+df=pd.read_csv(file_path)
+df.head()
+
+df.isnull().sum()
+
+df['Age'].mean(skipna=True)
+
+df['Age'].fillna(df["Age"].median(skipna=True),inplace=True)
+
+df["Fare"].fillna(df['Fare'].value_counts().idxmax(),inplace=True)
+df.drop('Cabin',axis=1,inplace=True)
+df.isnull().sum()
+
+df=df[['Survived',"Pclass","Sex","Age","Fare"]]
+df.head()
+
+df.shape
+
+df.describe()
+df.dtypes
+print(df['Sex'].unique())
+df['Sex']=df['Sex'].replace({'female':1,'male':0}).astype(int)
+df.dtypes
+df.head(10)y=df['Survived']
+df.drop("Survived",axis=1,inplace=True)
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import accuracy_score, classification_report
+
+# Параметри для оптимізації
+param_grid_log_reg = {
+    'C': [0.01, 0.1, 1, 10, 100],
+    'solver': ['liblinear']
+}
+
+param_grid_decision_tree = {
+    'max_depth': [None, 1, 5, 10, 20],
+    'min_samples_split': [2, 5, 10]
+}
+
+param_grid_random_forest = {
+    'n_estimators': [10, 50, 100],
+    'max_depth': [None, 5, 10, 20],
+    'min_samples_split': [2, 5, 10]
+}
+
+# Створення моделей
+models = {
+    'Логістична регресія': (LogisticRegression(max_iter=10000), param_grid_log_reg),
+    'Дерево рішень': (DecisionTreeClassifier(random_state=42), param_grid_decision_tree),
+    'Випадковий ліс': (RandomForestClassifier(random_state=42), param_grid_random_forest)
+}
+
+best_model_name = ""
+best_accuracy = 0
+best_model = None
+
+# Оптимізація параметрів та оцінка моделей
+for model_name, (model, param_grid) in models.items():
+    grid_search = GridSearchCV(model, param_grid, cv=5, scoring='accuracy')
+    grid_search.fit(X_train, y_train)
+
+    # Оцінка моделі
+    best_estimator = grid_search.best_estimator_
+    y_pred = best_estimator.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+
+    print(f'\n{model_name}:')
+    print(f'Найкращі параметри: {grid_search.best_params_}')
+    print(f'Точність: {accuracy:.4f}')
+    print('Звіт про класифікацію:')
+    print(classification_report(y_test, y_pred))
+
+    # Вибір найкращої моделі
+    if accuracy > best_accuracy:
+        best_accuracy = accuracy
+        best_model_name = model_name
+        best_model = best_estimator
+# Прогнозування на тестовій вибірці
+y_pred_best = best_model.predict(X_test)
+
+# Виведення результатів прогнозування для перших 10 випадків
+print(f'\nНайкраща модель: {best_model_name}')
+print('Прогноз для перших 10 випадків:')
+print(y_pred_best[:10])
+
+import pandas as pd
+from sklearn.datasets import load_breast_cancer
+
+# Завантаження датасету
+data = load_breast_cancer()
+
+df = pd.DataFrame(data.data, columns=data.feature_names)
+df['target'] = data.target  # Додавання цільового стовпця
+
+# Виведення перших рядків DataFrame
+df.head()
+
+# Виведення назв стовпців
+print("\nColumn names:")
+df.columns
+# Виведення типів даних кожного стовпця
+print("\nData types of each column:")
+df.dtypes
+# Перевірка на пропущені значення
+print("\nChecking for missing values:")
+df.isnull().sum()
+# Перевірка розміру DataFrame
+print("\nSize of the DataFrame:")
+df.shape
+
+rom sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+
+# Завантаження датасету
+data = load_breast_cancer()
+
+# Отримання ознак (features) та міток (target)
+X = data.data
+y = data.target
+
+# Розділення на навчальний та тестовий набори
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Перевірка розмірів
+print(f'Розмір навчального набору: {X_train.shape}')
+print(f'Розмір тестового набору: {X_test.shape}')
+
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+
+# Завантаження датасету
+data = load_breast_cancer()
+
+# Отримання ознак та міток
+X = data.data
+y = data.target
+
+# Розділення на навчальний та тестовий набори
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# 1. Логістична регресія
+log_reg = LogisticRegression(max_iter=10000)
+log_reg.fit(X_train, y_train)
+y_pred_log_reg = log_reg.predict(X_test)
+accuracy_log_reg = accuracy_score(y_test, y_pred_log_reg)
+
+# 2. Дерево рішень
+decision_tree = DecisionTreeClassifier(random_state=42)
+decision_tree.fit(X_train, y_train)
+y_pred_decision_tree = decision_tree.predict(X_test)
+accuracy_decision_tree = accuracy_score(y_test, y_pred_decision_tree)
+
+# 3. Випадковий ліс
+random_forest = RandomForestClassifier(random_state=42)
+random_forest.fit(X_train, y_train)
+y_pred_random_forest = random_forest.predict(X_test)
+accuracy_random_forest = accuracy_score(y_test, y_pred_random_forest)
+
+# Виведення точності моделей
+print(f'Точність логістичної регресії: {accuracy_log_reg:.4f}')
+print(f'Точність дерева рішень: {accuracy_decision_tree:.4f}')
+print(f'Точність випадкового лісу: {accuracy_random_forest:.4f}')
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+
+# Завантаження датасету
+data = load_breast_cancer()
+
+# Отримання ознак та міток
+X = data.data
+y = data.target
+
+# Розділення на навчальний та тестовий набори
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+
+# Параметри для оптимізації
+param_grid_log_reg = {
+    'C': [0.01, 0.1, 1, 10, 100],
+    'solver': ['liblinear', 'saga']
+}
+
+param_grid_decision_tree = {
+    'max_depth': [None, 1, 5, 10, 20],
+    'min_samples_split': [2, 5, 10]
+}
+
+param_grid_random_forest = {
+    'n_estimators': [10, 50, 100],
+    'max_depth': [None, 5, 10, 20],
+    'min_samples_split': [2, 5, 10]
+}
+
+# 1. Логістична регресія
+log_reg = LogisticRegression(max_iter=10000)
+grid_search_log_reg = GridSearchCV(log_reg, param_grid_log_reg, cv=5, scoring='accuracy')
+grid_search_log_reg.fit(X_train, y_train)
+best_log_reg = grid_search_log_reg.best_estimator_
+
+# 2. Дерево рішень
+decision_tree = DecisionTreeClassifier(random_state=42)
+grid_search_decision_tree = GridSearchCV(decision_tree, param_grid_decision_tree, cv=5, scoring='accuracy')
+grid_search_decision_tree.fit(X_train, y_train)
+best_decision_tree = grid_search_decision_tree.best_estimator_
+
+# 3. Випадковий ліс
+random_forest = RandomForestClassifier(random_state=42)
+grid_search_random_forest = GridSearchCV(random_forest, param_grid_random_forest, cv=5, scoring='accuracy')
+grid_search_random_forest.fit(X_train, y_train)
+best_random_forest = grid_search_random_forest.best_estimator_
+
+# Оцінка на тестовому наборі
+y_pred_log_reg = best_log_reg.predict(X_test)
+y_pred_decision_tree = best_decision_tree.predict(X_test)
+y_pred_random_forest = best_random_forest.predict(X_test)
+
+accuracy_log_reg = accuracy_score(y_test, y_pred_log_reg)
+accuracy_decision_tree = accuracy_score(y_test, y_pred_decision_tree)
+accuracy_random_forest = accuracy_score(y_test, y_pred_random_forest)
+
+# Виведення точності моделей
+print(f'Оптимальна логістична регресія: {accuracy_log_reg:.4f}')
+print(f'Оптимальне дерево рішень: {accuracy_decision_tree:.4f}')
+print(f'Оптимальний випадковий ліс: {accuracy_random_forest:.4f}')
+
+# Виведення найкращих параметрів
+print("Найкращі параметри для логістичної регресії:", grid_search_log_reg.best_params_)
+print("Найкращі параметри для дерева рішень:", grid_search_decision_tree.best_params_)
+print("Найкращі параметри для випадкового лісу:", grid_search_random_forest.best_params_)
+
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Завантаження датасету
+data = load_breast_cancer()
+
+# Отримання ознак та міток
+X = data.data
+y = data.target
+
+# Розділення на навчальний та тестовий набори
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Параметри для оптимізації
+param_grid_log_reg = {
+    'C': [0.01, 0.1, 1, 10, 100],
+    'solver': ['liblinear', 'saga']
+}
+
+param_grid_decision_tree = {
+    'max_depth': [None, 1, 5, 10, 20],
+    'min_samples_split': [2, 5, 10]
+}
+
+param_grid_random_forest = {
+    'n_estimators': [10, 50, 100],
+    'max_depth': [None, 5, 10, 20],
+    'min_samples_split': [2, 5, 10]
+}
+
+# Моделі та їх оптимізація
+log_reg = LogisticRegression(max_iter=10000)
+grid_search_log_reg = GridSearchCV(log_reg, param_grid_log_reg, cv=5, scoring='accuracy')
+grid_search_log_reg.fit(X_train, y_train)
+best_log_reg = grid_search_log_reg.best_estimator_
+
+decision_tree = DecisionTreeClassifier(random_state=42)
+grid_search_decision_tree = GridSearchCV(decision_tree, param_grid_decision_tree, cv=5, scoring='accuracy')
+grid_search_decision_tree.fit(X_train, y_train)
+best_decision_tree = grid_search_decision_tree.best_estimator_
+
+random_forest = RandomForestClassifier(random_state=42)
+grid_search_random_forest = GridSearchCV(random_forest, param_grid_random_forest, cv=5, scoring='accuracy')
+grid_search_random_forest.fit(X_train, y_train)
+best_random_forest = grid_search_random_forest.best_estimator_
+
+# Оцінка моделей
+models = {
+    'Логістична регресія': best_log_reg,
+    'Дерево рішень': best_decision_tree,
+    'Випадковий ліс': best_random_forest
+}
+
+for model_name, model in models.items():
+    y_pred = model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    conf_matrix = confusion_matrix(y_test, y_pred)
+    class_report = classification_report(y_test, y_pred)
+
+    # Виведення результатів
+    print(f'\n{model_name}:')
+    print(f'Точність: {accuracy:.4f}')
+    print('Матриця помилок:')
+    print(conf_matrix)
+    print('Звіт про класифікацію:')
+    print(class_report)
+
+    # Візуалізація матриці помилок
+    plt.figure(figsize=(5, 4))
+    sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues',
+                xticklabels=['Негативний', 'Позитивний'],
+                yticklabels=['Негативний', 'Позитивний'])
+    plt.title(f'Матриця помилок для {model_name}')
+    plt.xlabel('Передбачення')
+    plt.ylabel('Справжнє значення')
+    plt.show()
+
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+# Завантаження датасету
+data = load_breast_cancer()
+
+# Отримання ознак та міток
+X = data.data
+y = data.target
+
+# Розділення на навчальний та тестовий набори
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Параметри для оптимізації
+param_grid_log_reg = {
+    'C': [0.01, 0.1, 1, 10, 100],
+    'solver': ['liblinear', 'saga']
+}
+
+param_grid_decision_tree = {
+    'max_depth': [None, 1, 5, 10, 20],
+    'min_samples_split': [2, 5, 10]
+}
+
+param_grid_random_forest = {
+    'n_estimators': [10, 50, 100],
+    'max_depth': [None, 5, 10, 20],
+    'min_samples_split': [2, 5, 10]
+}
+
+# Моделі та їх оптимізація
+log_reg = LogisticRegression(max_iter=10000)
+grid_search_log_reg = GridSearchCV(log_reg, param_grid_log_reg, cv=5, scoring='accuracy')
+grid_search_log_reg.fit(X_train, y_train)
+best_log_reg = grid_search_log_reg.best_estimator_
+
+decision_tree = DecisionTreeClassifier(random_state=42)
+grid_search_decision_tree = GridSearchCV(decision_tree, param_grid_decision_tree, cv=5, scoring='accuracy')
+grid_search_decision_tree.fit(X_train, y_train)
+best_decision_tree = grid_search_decision_tree.best_estimator_
+
+random_forest = RandomForestClassifier(random_state=42)
+grid_search_random_forest = GridSearchCV(random_forest, param_grid_random_forest, cv=5, scoring='accuracy')
+grid_search_random_forest.fit(X_train, y_train)
+best_random_forest = grid_search_random_forest.best_estimator_
+
+# Оцінка моделей
+models = {
+    'Логістична регресія': best_log_reg,
+    'Дерево рішень': best_decision_tree,
+    'Випадковий ліс': best_random_forest
+}
+
+best_accuracy = 0
+best_model_name = ""
+best_model = None
+
+# Оцінка та вибір найкращої моделі
+for model_name, model in models.items():
+    y_pred = model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+
+    print(f'\n{model_name}:')
+    print(f'Точність: {accuracy:.4f}')
+
+    if accuracy > best_accuracy:
+        best_accuracy = accuracy
+        best_model_name = model_name
+        best_model = model
+
+# Прогноз на тестовій вибірці з найкращою моделлю
+y_pred_best = best_model.predict(X_test)
+
+# Виведення результатів прогнозування
+print(f'\nНайкраща модель: {best_model_name}')
+print('Результати прогнозування на тестовій вибірці:')
+print(y_pred_best)
+
+# Додатково можна вивести матрицю помилок і звіт про класифікацію для найкращої моделі
+conf_matrix_best = confusion_matrix(y_test, y_pred_best)
+class_report_best = classification_report(y_test, y_pred_best)
+
+print('Матриця помилок:')
+print(conf_matrix_best)
+print('Звіт про класифікацію:')
+print(class_report_best)
