@@ -1,0 +1,124 @@
+import numpy as np
+m=list(range(2, 21, 2))
+print(m)
+
+import numpy as np
+np.random.seed(42)
+m= np.random.rand(3, 3)
+print(m)
+
+import numpy as np
+np.random.seed(42)
+m = np.random.randint(1, 21, size=(3, 3))
+print(m)
+
+import numpy as np
+array = np.random.rand(4, 4)
+min_element = np.min(array)
+print("Масив:")
+print(array)
+print("Мінімальний елемент:", min_element)
+
+import numpy as np
+array1 = np.random.randint(1, 16, size=7)
+array2 = np.random.randint(1, 16, size=7)
+dodavanna = array1 + array2
+vidnimanna = array1 - array2
+mnozenna = array1 * array2
+print("Масив 1:", array1)
+print("Масив 2:", array2)
+print("Додавання:", dodavanna)
+print("Віднімання:", vidnimanna)
+print("Множення:", mnozenna)
+
+import numpy as np
+m1 = np.random.randint(3, 31, size=(3, 3))
+m2 = np.random.randint(3, 31, size=(3, 3))
+product = np.matmul(m1, m2)
+print(m1)
+print(m2)
+print(product)
+
+import numpy as np
+matrix1 = np.random.randint(1, 8, size=(4, 2))
+matrix2 = np.random.randint(1, 8, size=(2, 5))
+product = np.matmul(matrix1, matrix2)
+print("Матриця 1 (4x2):")
+print(matrix1)
+print("\nМатриця 2 (2x5):")
+print(matrix2)
+print("\nДобуток матриць (4x5):")
+print(product)
+
+import numpy as np
+m = np.random.rand(2, 3)
+transposed_m = np.transpose(m)
+print("Початкова матриця (2x3):")
+print(m)
+print("\nТранспонована матриця (3x2):")
+print(transposed_m)
+
+import numpy as np
+m = np.random.randint(1, 11, size=(3, 4))
+vector = np.random.randint(1, 11, size=(4, 1))
+product = np.matmul(m, vector)
+print("Матриця (3x4):")
+print(m)
+print("\nВектор (4x1):")
+print(vector)
+print("\nДобуток матриці на вектор:")
+print(product)
+
+import numpy as np
+m = np.random.rand(2, 3)
+vector = np.random.randint(1, 11, size=(3, 1))
+product = np.matmul(m, vector)
+print("Матриця (2x3):")
+print(m)
+print("\nВектор (3x1):")
+print(vector)
+print("\nДобуток матриці на вектор:")
+print(product)
+
+import numpy as np
+m1 = np.random.randint(1, 11, size=(4, 4))
+m2 = np.random.randint(1, 11, size=(4, 4))
+
+m_sum = m1 + m2
+
+print("Матриця 1 (4x4):")
+print(m1)
+print("\nМатриця 2 (4x4):")
+print(m2)
+print("\nСума матриць:")
+print(m_sum)
+
+import numpy as np
+m1 = np.random.uniform(-1, 1, size=(4, 4))
+m2 = np.random.uniform(-1, 1, size=(4, 4))
+product = np.matmul(m1, m2)
+print("Матриця 1 (4x4):")
+print(m1)
+print("\nМатриця 2 (4x4):")
+print(m2)
+print("\nДобуток матриць:")
+print(product)
+
+
+import numpy as np
+m = np.random.uniform(-1, 1, size=(3, 3))
+sum_of_elements = np.sum(m)
+print("Матриця (3x3):")
+print(m)
+print("\nСума елементів матриці:")
+print(sum_of_elements)
+
+import numpy as np
+m = np.random.uniform(-0.5, 0.5, size=(5, 5))
+row_sums = np.sum(m, axis=1)
+row_sums_column_vector = row_sums.reshape(-1, 1)
+print("Матриця (5x5):")
+print(m)
+print("\nВектор-стовпчик, що містить суму елементів кожного рядка:")
+print(row_sums_column_vector)
+
