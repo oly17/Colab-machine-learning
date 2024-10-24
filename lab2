@@ -1,0 +1,320 @@
+import pandas as pd
+
+url="https://en.wikipedia.org/wiki/List_of_countries_by_GDP_(nominal)"
+tables=pd.read_html(url)
+df=tables[2]
+df.head()
+
+df.columns
+
+current_colums=[
+    ('Country/Territory','Country/Territory'),
+    ('IMF[1][13]','Forecast'),
+    ('IMF[1][13]','Year'),
+    ('WorldBank[14]','Estimate'),
+    ('WorldBank[14]','YearYear'),
+    ('United Nations[15]','Estimate'),
+    ('United Nations[15]', 'Year')
+]
+
+new_columns=[
+    'Country',
+    'IMF_Forecast',
+    'IMF_Year',
+    'WorldBank_Eastimate',
+    'WorldBank_Year',
+    'UN_Estimate',
+    'UN_Year'
+]
+df.columns=new_columns
+df.head()
+
+selected_columns={
+    'IMF_Forecast':'MVF_2024',
+    'WorldBank_Eastimate':'WorldBank_2023',
+    'UN_Estimate':'OON_2022'
+
+}
+df1= df[['Country']+list(selected_columns.keys())]
+df=df1.rename(columns=selected_columns)
+df.head()
+
+df.shape
+
+df.isnull().sum()
+
+print("/nTипи даних кожного сTовпця:\n",df.dtypes)
+
+df.replace('-',float('nan'),inplace=True)
+df['MVF_2024 ']=pd.to_numeric(df['MVF_2024'],errors='coerce')
+df['WorldBank_2023']=pd.to_numeric(df['WorldBank_2023'],errors='coerce')
+df['OON_2022']=pd.to_numeric(df['OON_2022'],errors='coerce')
+print("/nTипи даних после конверации:\n",df.dtypes)
+df.head(10)
+
+df.isnull().sum()
+
+import numpy as np
+df=df.replace({'-':np.NaN})
+df=df.fillna(df.mean(numeric_only=True),axis=0)
+df.head(5)
+
+df.isnull().sum()
+
+import pandas as pd
+duplicates = df.duplicated().sum()
+print(f'Кількість дублікатів: {duplicates}')
+df_cleaned = df.drop_duplicates()
+print(df_cleaned)
+df.head(5)
+
+import pandas as pd
+description = df.describe(include='all')
+print(description)
+df.head(5)
+
+import pandas as pd
+countries = ['World', 'United States	', 'China', 'Germany	', 'Japan	']
+MVF_2024 = [109529216.0,28781083.0,18532633.0,4591100.0,4110452.0]
+WorldBank_2023 = [105435540.0,27360935.0,17794782.0,4456081.0,4212945.0]
+
+# Створюємо DataFrame
+data = {
+    'Country': countries,
+    'MVF_2024': MVF_2024,
+    'WorldBank_2023': WorldBank_2023
+}
+
+df = pd.DataFrame(data)
+
+
+# Обчислюємо відхилення
+df['Deviation'] = df['MVF_2024'] - df['WorldBank_2023']
+
+# Визначаємо країни з найбільшим відхиленням
+# Сортуємо за величиною відхилення в порядку спадання
+df_sorted = df.sort_values(by='Deviation', ascending=False)
+
+# Виводимо результати
+print("Країни з найбільшим відхиленням між MVF_2024 та WorldBank_2023:")
+print(df_sorted[['Country', 'Deviation']])
+df.head(5)
+
+import pandas as pd
+
+correlation_matrix = df.corr()
+
+# Виводимо кореляційну матрицю
+print("Кореляційна матриця:")
+print(correlation_matrix)
+
+# Визначаємо пари змінних з найвищою кореляцією
+max_corr = correlation_matrix.abs().unstack().sort_values(ascending=False)
+max_corr = max_corr[max_corr < 1]  # Видаляємо кореляцію змінної саму з собою
+
+print("\nПари змінних з найвищою кореляцією:")
+print(max_corr.head())
+df.head(5)
+
+import pandas as pd
+
+
+# Обчислюємо середнє значення для кожного стовпця
+mean_values = df[['MVF_2024', 'WorldBank_2023', 'OON_2022']].mean()
+
+print("Середні значення для кожного стовпця:")
+print(mean_values)
+
+# Для порівняння змінних між роками
+
+data_2023 = {
+     'Country': ['World', 'United States	', 'China', 'Germany	', 'Japan	'],
+    'MVF_2023': [109529216.0,28781083.0,18532633.0,4591100.0,4110452.0]  ,
+    'WorldBank_2022': [105435540.0,27360935.0,17794782.0,4456081.0,4212945.0],
+    'OON_2021': [100834796.0,25744100.0,17963170.0,4076923.0	,4232173.0]
+}
+
+df_2023 = pd.DataFrame(data_2023)
+
+# Обчислюємо середні значення для кожного стовпця в 2023 році
+mean_values_2023 = df_2023[['MVF_2023', 'WorldBank_2022', 'OON_2021']].mean()
+
+print("\nСередні значення для кожного стовпця у 2023 році:")
+print(mean_values_2023)
+
+# Порівнюємо середні значення між роками
+comparison = pd.DataFrame({
+    '2024': mean_values,
+    '2023': mean_values_2023
+})
+
+print("\nПорівняння середніх значень між роками:")
+print(comparison)
+
+
+import pandas as pd
+df.set_index('Country', inplace=True)
+std_devs = df.std(axis=1)
+
+# Визначаємо країну з найвищою варіативністю
+most_variable_country = std_devs.idxmax()
+highest_variability = std_devs.max()
+
+print("Стандартне відхилення для кожної країни:")
+print(std_devs)
+
+print(f"\nКраїна з найвищою варіативністю у показниках між роками: {most_variable_country}")
+print(f"Максимальне стандартне відхилення: {highest_variability}")
+
+import pandas as pd
+data = {
+'Country' : ['World', 'United States	', 'China', 'Germany	', 'Japan	'],
+'MVF_2024' : [109529216.0,28781083.0,18532633.0,4591100.0,4110452.0],
+'WorldBank_2023' : [105435540.0,27360935.0,17794782.0,4456081.0,4212945.0],
+'OON_2022':[100834796.0,25744100.0,17963170.0,4076923.0,4232173.0]
+}
+df = pd.DataFrame(data)
+
+df.set_index('Country', inplace=True)
+
+# Знаходимо країну з найвищим і найнижчим показником для кожного року
+max_values = df.idxmax()
+min_values = df.idxmin()
+
+max_values = pd.DataFrame({
+    'Year': df.columns,
+    'Country_with_Max': max_values,
+    'Max_Value': df.max()
+})
+
+min_values = pd.DataFrame({
+    'Year': df.columns,
+    'Country_with_Min': min_values,
+    'Min_Value': df.min()
+})
+
+print("Країна з найвищими показниками для кожного року:")
+print(max_values)
+
+print("\nКраїна з найнижчими показниками для кожного року:")
+print(min_values)
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+
+
+# Побудова гістограми для показників MVF_2024
+plt.figure(figsize=(10, 6))
+plt.hist(df['MVF_2024'], bins=5, edgecolor='black', alpha=0.7)
+plt.title('Розподіл показників MVF_2024 серед всіх країн')
+plt.xlabel('MVF_2024')
+plt.ylabel('Кількість країн')
+plt.grid(True)
+
+# Відображення гістограми
+plt.show()
+
+
+import pandas as pd
+
+
+
+# Встановлюємо колонку "Country" як індекс
+df.set_index('Country', inplace=True)
+
+# Обчислюємо загальне значення для кожного року
+total_values = df.sum()
+
+# Обчислюємо частку кожної країни в загальному значенні
+percentage_shares = df.divide(total_values, axis=1) * 100
+
+print("Частка кожної країни в загальному значенні для кожного року:")
+print(percentage_shares)
+
+# Аналіз зміни часток з часом
+# Порівнюємо частки між роками, наприклад, MVF_2024 і WorldBank_2023
+print("\nЗміна часток між роками:")
+for column in percentage_shares.columns:
+    print(f"\nЧастка для {column}:")
+    print(percentage_shares[[column]].sort_values(by=column, ascending=False))
+
+import pandas as pd
+import matplotlib.pyplot as plt
+# Приклад даних
+data = {
+   'Country' : ['World', 'United States	', 'China', 'Germany	', 'Japan	'],
+'MVF_2024' : [109529216.0,28781083.0,18532633.0,4591100.0,4110452.0],
+'WorldBank_2023' : [105435540.0,27360935.0,17794782.0,4456081.0,4212945.0],
+'OON_2022':[100834796.0,25744100.0,17963170.0,4076923.0,4232173.0]
+}
+
+df = pd.DataFrame(data)
+
+
+
+# Перетворюємо дані для побудови графіка
+df_melted = df.melt(id_vars=['Country'], var_name='Year', value_name='Value')
+
+# Змінюємо рік в даних для зручності
+df_melted['Year'] = df_melted['Year'].replace({
+    'MVF_2024': '2024',
+    'WorldBank_2023': '2023',
+    'OON_2022': '2022'
+})
+
+# Побудова графіка
+plt.figure(figsize=(12, 8))
+
+for country in df['Country']:
+    country_data = df_melted[df_melted['Country'] == country]
+    plt.plot(country_data['Year'], country_data['Value'], marker='o', label=country)
+
+plt.title('Зміни в показниках для кожної країни за три роки')
+plt.xlabel('Рік')
+plt.ylabel('Показник')
+plt.legend(title='Країна')
+plt.grid(True)
+
+# Відображення графіка
+plt.show()
+
+import time
+import random
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import accuracy_score,classification_report
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
+from sklearn.model_selection import KFold,cross_val_score
+from sklearn.model_selection import train_test_split,GridSearchCV
+from sklearn.ensemble import RandomForestClassifier
+
+from google.colab import drive
+
+drive.mount('/content/drive')
+
+file_path='/content/drive/My Drive/titanic.csv'
+df=pd.read_csv(file_path)
+df.head()
+
+df.isnull().sum()
+
+df['Age'].mean(skipna=True)
+
+df['Age'].fillna(df['Age'].median(skipna=True),inplace=True)
+
+df['Fare'].fillna(df['Fare'].value_counts().idxmax(),inplace=True)
+
+df.drop('Cabin',axis=1,inplace=True)
+
+df.isnull().sum()
+
+df.head()
+
+df=df[['Survived','Pclass	','Sex','Age','Fare']]
+
+df
